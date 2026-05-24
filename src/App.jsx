@@ -1,47 +1,100 @@
 import "./App.css";
-import { useState } from "react";
-import { Trophy, Coins, Gift, Gamepad2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Trophy, Coins, Gamepad2, Gift } from "lucide-react";
+import { Preferences } from "@capacitor/preferences";
 
 export default function App() {
-
-  const [coins, setCoins] = useState(760);
-  const [level, setLevel] = useState(8);
-  const [reward, setReward] = useState("");
+  const [coins, setCoins] = useState(0);
+  const [level, setLevel] = useState(1);
   const [win, setWin] = useState("");
+  const [leaderboard, setLeaderboard] = useState([]);
 
- const playGame = () => {
-  const newCoins = coins + 10;
-  setCoins(newCoins);
+  // LOAD DATA
+  const loadData = async () => {
+    const { value: savedCoins } = await Preferences.get({ key: "coins" });
+    const { value: savedLevel } = await Preferences.get({ key: "level" });
 
-  // 📳 vibration
-  if (navigator.vibrate) {
-    navigator.vibrate(100);
-  }
+    if (savedCoins) setCoins(parseInt(savedCoins));
+    if (savedLevel) setLevel(parseInt(savedLevel));
 
-  if (newCoins >= level * 100) {
-    setLevel(level + 1);
+    const { value } = await Preferences.get({ key: "leaderboard" });
 
-    if (navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]);
+    if (value) {
+      setLeaderboard(JSON.parse(value));
     }
-  }
-};
+  };
 
-const spinReward = () => {
-  const rewards = [20, 50, 100, 200];
-  const randomReward =
-    rewards[Math.floor(Math.random() * rewards.length)];
+  // SAVE DATA
+  const saveData = async (newCoins, newLevel) => {
+    await Preferences.set({
+      key: "coins",
+      value: newCoins.toString(),
+    });
 
-  setCoins(coins + randomReward);
+    await Preferences.set({
+      key: "level",
+      value: newLevel.toString(),
+    });
+  };
 
-  setWin(`🎉 +${randomReward} COINS!`);
+  // SAVE SCORE
+  const saveScore = async (finalCoins) => {
+    const { value } = await Preferences.get({ key: "leaderboard" });
 
-  if (navigator.vibrate) {
-    navigator.vibrate(200);
-  }
+    let scores = value ? JSON.parse(value) : [];
 
-  setTimeout(() => setWin(""), 1500);
-};
+    scores.push({
+      score: finalCoins,
+      date: Date.now(),
+    });
+
+    scores.sort((a, b) => b.score - a.score);
+    scores = scores.slice(0, 5);
+
+    await Preferences.set({
+      key: "leaderboard",
+      value: JSON.stringify(scores),
+    });
+
+    setLeaderboard(scores);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // PLAY GAME
+  const playGame = () => {
+    const newCoins = coins + 10;
+    setCoins(newCoins);
+
+    let newLevel = level;
+
+    if (newCoins >= level * 100) {
+      newLevel = level + 1;
+      setLevel(newLevel);
+    }
+
+    saveData(newCoins, newLevel);
+    saveScore(newCoins);
+  };
+
+  // SPIN REWARD
+  const spinReward = () => {
+    const rewards = [20, 50, 100, 200];
+    const randomReward =
+      rewards[Math.floor(Math.random() * rewards.length)];
+
+    const newCoins = coins + randomReward;
+
+    setCoins(newCoins);
+    setWin(`🎉 +${randomReward} COINS!`);
+
+    saveData(newCoins, level);
+    saveScore(newCoins);
+
+    setTimeout(() => setWin(""), 1500);
+  };
 
   return (
     <div className="app">
@@ -77,22 +130,18 @@ const spinReward = () => {
         SPIN REWARD
       </button>
 
-      {reward && (
-        <div className="reward-box">
-          {reward}
-        </div>
-      )}
+      <div className="leaderboard">
+        <h3>🏆 Leaderboard</h3>
 
-      <div className="mission-box">
-        <h3>🔥 Daily Mission</h3>
-        <p>Reach higher levels and collect coins.</p>
+        {leaderboard.map((item, index) => (
+          <div key={index} className="lb-item">
+            #{index + 1} — {item.score} coins
+          </div>
+        ))}
       </div>
+
+      {win && <div className="win-popup">{win}</div>}
 
     </div>
   );
-{win && (
-  <div className="win-popup">
-    {win}
-  </div>
-)}
 }
