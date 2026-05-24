@@ -1,11 +1,12 @@
 import "./App.css";
 import { useState } from "react";
-import { Trophy, Coins, Gamepad2 } from "lucide-react";
+import { Trophy, Coins, Gift, Gamepad2 } from "lucide-react";
 
 export default function App() {
 
-  const [coins, setCoins] = useState(0);
-  const [level, setLevel] = useState(1);
+  const [coins, setCoins] = useState(760);
+  const [level, setLevel] = useState(8);
+  const [reward, setReward] = useState("");
 
   const playGame = () => {
     const newCoins = coins + 10;
@@ -14,6 +15,15 @@ export default function App() {
     if (newCoins >= level * 100) {
       setLevel(level + 1);
     }
+  };
+
+  const spinReward = () => {
+    const rewards = [20, 50, 100, 200];
+    const randomReward =
+      rewards[Math.floor(Math.random() * rewards.length)];
+
+    setCoins(coins + randomReward);
+    setReward(`🎉 You won ${randomReward} coins!`);
   };
 
   return (
@@ -45,9 +55,20 @@ export default function App() {
         PLAY & EARN
       </button>
 
+      <button className="reward-btn" onClick={spinReward}>
+        <Gift />
+        SPIN REWARD
+      </button>
+
+      {reward && (
+        <div className="reward-box">
+          {reward}
+        </div>
+      )}
+
       <div className="mission-box">
         <h3>🔥 Daily Mission</h3>
-        <p>Reach 100 coins to level up.</p>
+        <p>Reach higher levels and collect coins.</p>
       </div>
 
     </div>
