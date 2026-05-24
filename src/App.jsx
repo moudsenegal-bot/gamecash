@@ -7,24 +7,41 @@ export default function App() {
   const [coins, setCoins] = useState(760);
   const [level, setLevel] = useState(8);
   const [reward, setReward] = useState("");
+  const [win, setWin] = useState("");
 
-  const playGame = () => {
-    const newCoins = coins + 10;
-    setCoins(newCoins);
+ const playGame = () => {
+  const newCoins = coins + 10;
+  setCoins(newCoins);
 
-    if (newCoins >= level * 100) {
-      setLevel(level + 1);
+  // 📳 vibration
+  if (navigator.vibrate) {
+    navigator.vibrate(100);
+  }
+
+  if (newCoins >= level * 100) {
+    setLevel(level + 1);
+
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
     }
-  };
+  }
+};
 
-  const spinReward = () => {
-    const rewards = [20, 50, 100, 200];
-    const randomReward =
-      rewards[Math.floor(Math.random() * rewards.length)];
+const spinReward = () => {
+  const rewards = [20, 50, 100, 200];
+  const randomReward =
+    rewards[Math.floor(Math.random() * rewards.length)];
 
-    setCoins(coins + randomReward);
-    setReward(`🎉 You won ${randomReward} coins!`);
-  };
+  setCoins(coins + randomReward);
+
+  setWin(`🎉 +${randomReward} COINS!`);
+
+  if (navigator.vibrate) {
+    navigator.vibrate(200);
+  }
+
+  setTimeout(() => setWin(""), 1500);
+};
 
   return (
     <div className="app">
@@ -73,4 +90,9 @@ export default function App() {
 
     </div>
   );
+{win && (
+  <div className="win-popup">
+    {win}
+  </div>
+)}
 }

@@ -116,3 +116,17 @@ body {
 .card h2 {
   animation: pop 0.3s ease;
 }
+
+.win-popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 15px 25px;
+  border-radius: 15px;
+  font-size: 20px;
+  box-shadow: 0 0 20px gold;
+  animation: pop 0.3s ease;
+}
