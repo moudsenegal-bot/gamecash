@@ -18,10 +18,7 @@ export default function App() {
     if (savedLevel) setLevel(parseInt(savedLevel));
 
     const { value } = await Preferences.get({ key: "leaderboard" });
-
-    if (value) {
-      setLeaderboard(JSON.parse(value));
-    }
+    if (value) setLeaderboard(JSON.parse(value));
   };
 
   // SAVE DATA
@@ -59,6 +56,34 @@ export default function App() {
     setLeaderboard(scores);
   };
 
+  // DAILY REWARD
+  const claimDailyReward = async () => {
+    const { value } = await Preferences.get({ key: "lastClaim" });
+
+    const now = Date.now();
+
+    if (value && now - parseInt(value) < 86400000) {
+      setWin("⏳ Reviens demain !");
+      return;
+    }
+
+    const reward = Math.floor(Math.random() * 100) + 20;
+    const newCoins = coins + reward;
+
+    setCoins(newCoins);
+    setWin(`🎁 Daily +${reward} coins!`);
+
+    await Preferences.set({
+      key: "lastClaim",
+      value: now.toString(),
+    });
+
+    saveData(newCoins, level);
+    saveScore(newCoins);
+
+    setTimeout(() => setWin(""), 2000);
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -66,14 +91,14 @@ export default function App() {
   // PLAY GAME
   const playGame = () => {
     const newCoins = coins + 10;
-    setCoins(newCoins);
-
     let newLevel = level;
 
     if (newCoins >= level * 100) {
       newLevel = level + 1;
       setLevel(newLevel);
     }
+
+    setCoins(newCoins);
 
     saveData(newCoins, newLevel);
     saveScore(newCoins);
@@ -105,7 +130,6 @@ export default function App() {
       </div>
 
       <div className="stats">
-
         <div className="card">
           <Coins size={40} />
           <h2>{coins}</h2>
@@ -117,7 +141,6 @@ export default function App() {
           <h2>{level}</h2>
           <p>Level</p>
         </div>
-
       </div>
 
       <button className="play-btn" onClick={playGame}>
@@ -128,6 +151,10 @@ export default function App() {
       <button className="reward-btn" onClick={spinReward}>
         <Gift />
         SPIN REWARD
+      </button>
+
+      <button className="daily-btn" onClick={claimDailyReward}>
+        🎁 Daily Reward
       </button>
 
       <div className="leaderboard">
